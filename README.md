@@ -1,1 +1,2 @@
-# camlab
+# CamLab
+## play with camera pose

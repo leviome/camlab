@@ -1,0 +1,22 @@
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "camlab"
+version = "0.0.1"
+authors = [
+  { name="Levi", email="levio.pku@gmail.com" },
+]
+description = "play with camera poses"
+readme = "README.md"
+requires-python = ">=3.0"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/leviome/camlab"
+"Bug Tracker" = "https://github.com/leviome/camlab/issues"
+
