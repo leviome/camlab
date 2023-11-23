@@ -1,6 +1,10 @@
 # CamLab
 ## play with camera pose
 
+```sh
+pip install camlab
+```
+
 <p float="center">
   <img src="assets/camera_system_calibration.gif" width="78%" />
 </p>
