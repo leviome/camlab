@@ -16,6 +16,9 @@ class CameraObj:
         # extrinsic
         self.R = None
         self.T = None
+        self.is_intri_set = False
+        
+        self.touch = 0
 
         if intri_mat:
             self.K = intri_mat
@@ -25,6 +28,7 @@ class CameraObj:
             self.o_y = intri_mat[1][2]
             self.w = int(2 * self.o_x + .5)
             self.h = int(2 * self.o_y + .5)
+            self.is_intri_set = True
 
     def manual_init(self, focal, w, h):
         if isinstance(focal, list):
@@ -37,10 +41,16 @@ class CameraObj:
         self.h = h
         self.o_x = w / 2
         self.o_y = h / 2
+        self.is_intri_set = True
 
     def load_extrinsic(self, extrinsic):
         self.R = extrinsic[:3, :3]
         self.T = extrinsic[:3, -1]
+
+    def intri_check(self):
+        if not self.is_intri_set:
+            print("please set intri parameters !")
+            raise Exception
 
     def world2cam(self, p):
         if self.R is None or self.T is None:
@@ -61,10 +71,62 @@ class CameraObj:
             return [int(-x * self.focal_x / z + self.o_x + .5), int(y * self.focal_y / z + self.o_y + .5)]
 
     def world2screen(self, p, to_int=False):
+        self.intri_check()
         return self.cam2screen(self.world2cam(p), to_int=to_int)
+
+    def make_ray(self, screen_p, h=None, w=None, extri=None):
+        self.intri_check()
+        if h is None:
+            h = self.h
+        if w is None:
+            w = self.w
+        if extri is None:
+            R = self.R
+            T = self.T
+        else:
+            R = extri[:3, :3]
+            T = extri[:3, -1]
+
+        x, y = screen_p
+        direction = np.array([(x - self.o_x) / self.focal_x, - (y - self.o_y) / self.focal_y, -1])
+        ray_d = np.sum(direction[None] * R, -1)
+        ray_o = T
+
+        return ray_o, ray_d
+     
+    def quaternion2rotation(self, quater):
+        self.touch += 1
+        w, x, y, z = quater
+        r11 = 1 - 2 * y * y - 2 * x * x
+        r12 = 2 * x * y - 2 * z * w
+        r13 = 2 * x * z + 2 * y * w
+        r21 = 2 * x * y + 2 * z * w
+        r22 = 1 - 2 * x * x - 2 * z * z
+        r23 = 2 * y * z - 2 * x * w
+        r31 = 2 * x * z - 2 * y * w
+        r32 = 2 * y * z + 2 * x * w
+        r33 = 1 - 2 * x * x - 2 * y * y
+
+        rot = [[r11, r12, r13],
+               [r21, r22, r23],
+               [r31, r32, r33]]
+        return np.array(rot)
+
+    def colmap2extri(self, cmp):
+        self.touch += 1
+        quater = cmp[0:4]
+        trans = cmp[4:]
+        rot = self.quaternion2rotation(quater)
+        extri = np.eye(4)
+        extri[:3, :3] = rot
+        extri[0][-1] = trans[0]
+        extri[1][-1] = trans[1]
+        extri[2][-1] = trans[2]
+        return extri
+
        
 
-def _test_cam():
+def _test1():
     import cv2
     intri = [[1111.0, 0.0, 400.0],
          [0.0, 1111.0, 400.0],
@@ -107,6 +169,42 @@ def _test_cam():
     cv2.line(blank, p_s[2], p_s[5], (255, 255, 0), 1)
     cv2.imwrite("demo.png", blank)
 
+def _test2():
+    intri = [[1111.0, 0.0, 400.0],
+         [0.0, 1111.0, 400.0],
+         [0.0, 0.0, 1.0]]
+    extri = np.array(
+        [[-9.9990e-01,  4.1922e-03, -1.3346e-02, -5.3798e-02],
+        [-1.3989e-02, -2.9966e-01,  9.5394e-01,  3.8455e+00],
+        [-4.6566e-10,  9.5404e-01,  2.9969e-01,  1.2081e+00],
+        [0.0, 0.0, 0.0, 1.0]])
+    extri1 = np.array([[-3.0373e-01, -8.6047e-01,  4.0907e-01,  1.6490e+00],
+        [ 9.5276e-01, -2.7431e-01,  1.3041e-01,  5.2569e-01],
+        [-7.4506e-09,  4.2936e-01,  9.0313e-01,  3.6407e+00],
+        [0.0, 0.0, 0.0, 1.0]])
+    extri2 = np.array(
+        [[0.4429636299610138, 0.31377720832824707, -0.8398374915122986, -3.385493516921997],
+         [-0.8965396881103516, 0.1550314873456955, -0.41494810581207275, -1.6727094650268555],
+         [0.0, 0.936754584312439, 0.3499869406223297, 1.4108426570892334],
+         [0.0, 0.0, 0.0, 1.0]])
+
+    cam_obj = CameraObj(intri)
+    cam_obj.load_extrinsic(extri2)
+
+    p = (400, 400)
+    rayo, rayd = cam_obj.make_ray(p)
+    ps = cam_obj.world2screen(rayd - rayo, to_int=True)
+    print(rayo, rayd)
+    print(ps)
+    
+    quater = [0.980317, 0.002613, -0.19732, 0.005964]
+    print(cam_obj.quaternion2rotation(quater))
+
+    colmap_params = [0.980317, 0.002613, -0.19732, 0.005964, 5.91824, 0.099605, 0.691238]
+    print(cam_obj.colmap2extri(colmap_params))
+
+
 
 if __name__ == "__main__":
-    _test_cam()
+    # _test1()
+    _test2()
