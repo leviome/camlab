@@ -10,7 +10,7 @@ def focal2fov(focal, pixels):
     return 2 * math.atan(pixels / (2 * focal))
 
 
-def load_3dgs_camera(gs_cam):
+def load_3dgs_camera(cam_gs):
     """
     Support 3D Gaussian Splatting Camera-Class Object
     """
