@@ -14,7 +14,7 @@ def load_3dgs_camera(cam_gs):
     """
     Support 3D Gaussian Splatting Camera-Class Object
     """
-    cam = CameraObj()
+    cam = CameraObj(image_name=cam_gs.image_name)
     cam.manual_init(focal=fov2focal(cam_gs.FoVx, cam_gs.image_width),
                     w=cam_gs.image_width, h=cam_gs.image_height)
 
