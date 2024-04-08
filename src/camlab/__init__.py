@@ -27,3 +27,36 @@ def load_3dgs_camera(cam_gs):
     cam.R = c2w[:3, :3]
     cam.T = c2w[:3, 3]
     return cam
+
+def approximate(n, o=1e8):
+    return int(n * o) / o
+
+
+def closest_points_between_lines(line1, line2, acc=8):
+    # Convert points to numpy arrays for easier manipulation
+    p1, p2 = np.array(line1_points)
+    q1, q2 = np.array(line2_points)
+
+    # Direction vectors for each line
+    v1 = p2 - p1
+    v2 = q2 - q1
+
+    # Define matrices A and B for the equations
+    A = np.vstack((v1, -v2)).T
+    B = q1 - p1
+
+    # Solve the equation A * [t, s] = B
+    t, s = np.linalg.lstsq(A, B, rcond=None)[0]
+
+    # Calculate closest points on each line
+    closest_point_line1 = p1 + t * v1
+    closest_point_line2 = q1 + s * v2
+
+    # Calculate the distance
+    expo = pow(10, acc)
+    distance = np.linalg.norm(closest_point_line1 - closest_point_line2, ord=2)
+    distance = approximate(distance, o=expo)
+    closest_point_line1 = [approximate(n, o=expo) for n in list(closest_point_line1)]
+    closest_point_line2 = [approximate(n, o=expo) for n in list(closest_point_line2)]
+
+    return closest_point_line1, closest_point_line2, distance
