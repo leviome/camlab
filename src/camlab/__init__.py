@@ -34,8 +34,8 @@ def approximate(n, o=1e8):
 
 def closest_points_between_lines(line1, line2, acc=8):
     # Convert points to numpy arrays for easier manipulation
-    p1, p2 = np.array(line1_points)
-    q1, q2 = np.array(line2_points)
+    p1, p2 = np.array(line1)
+    q1, q2 = np.array(line2)
 
     # Direction vectors for each line
     v1 = p2 - p1
