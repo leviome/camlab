@@ -14,8 +14,10 @@ class CameraObjTensor:
         self.o_x = None
         self.o_y = None
         self.K = None
-        self.intrinsic = torch.FloatTensor(intri_mat).to(self.device)
-        self.intrinsic[0][0] *= -1
+        self.intrinsic = torch.eye(3)
+        if intri_mat is not None:
+            self.intrinsic = torch.FloatTensor(intri_mat).to(self.device)
+            self.intrinsic[0][0] *= -1
 
         # screen
         self.h = None
