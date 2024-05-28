@@ -96,6 +96,12 @@ class CameraObjTensor:
             res = res.long()
         return res
 
+    def prune_gaussians_by_box(self, gaussians, box):
+        x1, x2, y1, y2 = box
+        p = self.world2screen(gaussians._xyz, to_int=True)
+        in_indices = (p[:, 0] >= x1) & (p[:, 0] < x2) & (p[:, 1] >= y1) & (p[:, 1] < y2)
+        return in_indices
+
 
 def _test():
     intri = [[1111.0, 0.0, 400.0],
