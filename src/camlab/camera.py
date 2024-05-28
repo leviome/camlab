@@ -1,7 +1,7 @@
 import numpy as np
 
 class CameraObj:
-    def __init__(self, intri_mat=None):
+    def __init__(self, intri_mat=None, image_name=None):
         # intrinsic
         self.focal_x = None
         self.focal_y = None
@@ -17,6 +17,9 @@ class CameraObj:
         self.R = None
         self.T = None
         self.is_intri_set = False
+        
+        # image
+        self.image_name = image_name
         
         self.touch = 0
 
