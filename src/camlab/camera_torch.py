@@ -87,24 +87,25 @@ class CameraObjTensor:
                           z                                z
         """
         res = torch.matmul(self.intrinsic, p) / p[2]
-        return res.T[:, :2]
+        depth = p[2] # - self.focal_x  # Suppose focal_x = focal_y
+        return res.T[:, :2], depth
 
     def world2screen(self, p, to_int=False):
         self.intri_check()
-        res = self.cam2screen(self.world2cam(p))
+        res, depth = self.cam2screen(self.world2cam(p))
         if to_int:
             res = res.long()
-        return res
+        return res, depth
 
     def prune_gaussians_by_box(self, gaussians, box):
         x1, x2, y1, y2 = box
-        p = self.world2screen(gaussians._xyz, to_int=True)
+        p, _ = self.world2screen(gaussians._xyz, to_int=True)
         in_indices = (p[:, 0] >= x1) & (p[:, 0] < x2) & (p[:, 1] >= y1) & (p[:, 1] < y2)
         return in_indices
 
 
     def prune_gaussians_by_mask(self, gaussians, mask):
-        p = self.world2screen(gaussians._xyz, to_int=True)
+        p, _ = self.world2screen(gaussians._xyz, to_int=True)
         h, w = mask.shape
         in_screen = (p[:, 0] >= 0) & (p[:, 0] < w) & (p[:, 1] >= 0) & (p[:, 1] < h)
         flag = torch.zeros_like(in_screen)
