@@ -74,6 +74,18 @@ class CameraObjTensor:
             print("please set intri parameters !")
             raise Exception
 
+    def screen2cam(self, p, depth):
+        x, y = p
+        pz = torch.tensor([x, y, 1.0], dtype=torch.float32).to(self.device)
+        K_inv = torch.inverse(self.intrinsic)
+        return depth * torch.matmul(K_inv, pz)
+
+    def cam2world(self, p):
+        if self.R is None or self.Tr is None:
+            print("Please init the extrinsic params!")
+            return -1
+        return torch.matmul(p, self.R.T) + self.Tr
+
     def world2cam(self, p):
         if self.R is None or self.Tr is None:
             print("Please init the extrinsic params!")
