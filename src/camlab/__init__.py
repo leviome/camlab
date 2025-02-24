@@ -36,7 +36,8 @@ def load_3dgs_camera(cam_gs, device="cpu"):
                         w=cam_gs.image_width, h=cam_gs.image_height)
         ext = np.eye(4)
         ext[:3, :3] = np.transpose(cam_gs.R)
-        ext[:3, 3] = cam_gs.T
+        # ext[:3, 3] = cam_gs.T
+        ext[:3, 3] = cam_gs.world_view_transform[3, :3].cpu().numpy()
         c2w = np.linalg.inv(ext)
         c2w[:3, 1:3] *= -1
 
