@@ -116,13 +116,16 @@ class CameraObjTensor:
         return in_indices
 
 
-    def prune_gaussians_by_mask(self, gaussians, mask):
+    def prune_gaussians_by_mask(self, gaussians, mask, keep_out_screen=False):
         p, _ = self.world2screen(gaussians._xyz, to_int=True)
         h, w = mask.shape
         in_screen = (p[:, 0] >= 0) & (p[:, 0] < w) & (p[:, 1] >= 0) & (p[:, 1] < h)
+        out_screen = ~ in_screen
         flag = torch.zeros_like(in_screen)
         p_in = p[in_screen]
         flag[in_screen] = mask[p_in[:, 1], p_in[:, 0]]
+        if keep_out_screen:
+            flag = flag | out_screen
         return flag
 
 

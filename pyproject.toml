@@ -3,7 +3,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "camlab"
-version = "0.1.4.0"
+version = "0.1.5.0"
 authors = [
   { name="Levi", email="levio.pku@gmail.com" },
 ]
