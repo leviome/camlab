@@ -79,6 +79,25 @@ class CameraObjTensor:
         pz = torch.tensor([x, y, 1.0], dtype=torch.float32).to(self.device)
         K_inv = torch.inverse(self.intrinsic)
         return depth * torch.matmul(K_inv, pz)
+   
+    def screen2cam_batch(self, p, depth):
+        """
+        p: [N, 2] (may be int); depth: [N]
+        Returns: cam_coords [N, 3]
+        """
+        # ensure inputs are float and on the camera device
+        p = p.to(self.device, dtype=torch.float32)
+        depth = depth.to(self.device, dtype=torch.float32)
+
+        x = p[:, 0]
+        y = p[:, 1]
+        ones = torch.ones_like(x, dtype=torch.float32, device=self.device)
+        pz = torch.stack([x, y, ones], dim=1)  # [N, 3]
+
+        K_inv = torch.inverse(self.intrinsic)  # [3, 3]
+        cam_coords = torch.matmul(K_inv, pz.T).T  # [N, 3]
+        cam_coords = cam_coords * depth[:, None]  # [N, 3]
+        return cam_coords  # [N, 3]
 
     def cam2world(self, p):
         if self.R is None or self.Tr is None:
@@ -91,6 +110,12 @@ class CameraObjTensor:
             print("Please init the extrinsic params!")
             return -1
         return torch.matmul(p - self.Tr, self.R).T
+
+    def cam2world_batch(self, p):
+        if self.R is None or self.Tr is None:
+            print("Please init the extrinsic params!")
+            return -1
+        return torch.matmul(p, self.R.T) + self.Tr.unsqueeze(0)
 
     def cam2screen(self, p):
         """
